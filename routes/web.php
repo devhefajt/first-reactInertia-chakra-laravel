@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ConfigController;
 
 
 
@@ -28,6 +29,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/users/store', [UserController::class, 'store'])->name('users.store');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+
+    Route::get('/configs', [ConfigController::class, 'show'])->name('configs.index');
 });
 
 

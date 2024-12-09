@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\UserApiController;
+use App\Http\Controllers\ConfigController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -20,3 +21,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::get('/users', [UserApiController::class, 'index'])->name('users.index');
+
+
+
+Route::get('/get-list', [ConfigController::class, 'index']);
+Route::put('/authorize-routes', [ConfigController::class, 'update']);

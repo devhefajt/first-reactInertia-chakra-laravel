@@ -19,6 +19,9 @@ const SidebarLayout = () => {
                 <Link href="/settings" _hover={{ color: 'gray.200' }}>
                     Settings
                 </Link>
+                <Link href="/configs" _hover={{ color: 'gray.200' }}>
+                    Config
+                </Link>
             </VStack>
         </Box>
     );
