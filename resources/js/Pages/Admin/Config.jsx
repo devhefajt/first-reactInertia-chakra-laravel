@@ -21,9 +21,10 @@ export default function Configs() {
     const [configs, setConfigs] = useState({})
     const [isLoading, setIsLoading] = useState(false)
 
-//search state
+//search and count state
 const [searchText, setSearchText] = useState("");
-const [suggestions, setSuggestions] = useState([]);
+    const [suggestions, setSuggestions] = useState([]);
+    const [counter, setCounter] = useState(0);
 
 const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Information Architecture",
         "Javascript","Mechanical Engineering","Meteor","NodeJS","Plumbing","Python","Rails","React",
@@ -62,6 +63,7 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
     };
 
  
+    // Add skill to the meta string
     const handleSelectSkill = (skill) => {
         const currentMeta = configs?.unlocked_dev_shops?.meta || "";
         const updatedMeta = currentMeta ? `${currentMeta}, ${skill}` : skill;
@@ -69,9 +71,31 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
             ...prev,
             unlocked_dev_shops: { ...prev.unlocked_dev_shops, meta: updatedMeta },
         }));
+
+        const updatedCount = updatedMeta.split(", ").length;
+        setCounter(updatedCount);
+
         setSearchText("");
         setSuggestions([]);
-    }
+    };
+
+
+    // Remove skill from the meta string
+    const handleRemoveSkill = (skill) => {
+        const currentMeta = configs?.unlocked_dev_shops?.meta || "";
+        const updatedMeta = currentMeta
+            .split(", ")
+            .filter((item) => item !== skill)
+            .join(", ");
+        setConfigs((prev) => ({
+            ...prev,
+            unlocked_dev_shops: { ...prev.unlocked_dev_shops, meta: updatedMeta },
+        }));
+
+        const updatedCount = updatedMeta ? updatedMeta.split(", ").length : 0;
+        setCounter(updatedCount);
+    };
+
  
     const getList = async () => {
         setIsLoading(true);
@@ -119,6 +143,41 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
     }, []);
 
     const index = useCallback(() => getList(), [])
+
+
+    // Render skill badges
+    const renderSkillBadges = () => {
+        const selectedSkills = (configs?.unlocked_dev_shops?.meta || "")
+            .split(", ")
+            .filter((skill) => skill);
+
+        return (
+            <Box display="flex" flexWrap="wrap" gap={2} mt={2}>
+                {selectedSkills.map((skill, index) => (
+                    <Box
+                        key={index}
+                        display="flex"
+                        alignItems="center"
+                        bg="blue.100"
+                        px={3}
+                        py={1}
+                        borderRadius="md"
+                        boxShadow="sm"
+                    >
+                        <span>{skill}</span>
+                        <Button
+                            ml={2}
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemoveSkill(skill)}
+                        >
+                            &times;
+                        </Button>
+                    </Box>
+                ))}
+            </Box>
+        );
+    };
 
     return (<AdminMasterLayout>
         <Center>
@@ -216,9 +275,15 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
 
                     {/*New box */}
 
-                    <Box mt="5" border="1px" borderColor="gray.200" padding={5} borderRadius={"10px"}>
-                            <FormControl display="flex" alignItems="center" mb="2">
-                                <FormLabel htmlFor="unlocked_dev_shops">Unlocked Dev Shops?</FormLabel>
+                    <Box
+                            mt="5"
+                            border="1px"
+                            borderColor="gray.200"
+                            padding={5}
+                            borderRadius={"10px"}
+                        >
+                        <FormControl display="flex" alignItems="center" mb="2">                         
+                            <FormLabel htmlFor="unlocked_dev_shops">Unlocked Dev Shops?</FormLabel>
                                 <Switch
                                     id="unlocked_dev_shops"
                                     name="unlocked_dev_shops"
@@ -228,14 +293,15 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
                                 />
                             </FormControl>
                             {configs?.unlocked_dev_shops?.value == 1 && (
-                                <FormControl>
-                                    {/* Search Input */}
+                            <FormControl>
+                                {/* count skills */}
+                                <span>Total Skills: {counter}</span>
+
                                     <Input
                                         placeholder="Search skills..."
                                         value={searchText}
                                         onChange={handleSearchChange}
                                     />
-                                    {/* Suggestions Dropdown */}
                                     {suggestions.length > 0 && (
                                         <List
                                             border="1px solid gray"
@@ -244,7 +310,7 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
                                             bg="white"
                                             boxShadow="md"
                                             zIndex={10}
-                                    >
+                                        >
                                             {suggestions.map((skill, index) => (
                                                 <ListItem
                                                     key={index}
@@ -258,7 +324,7 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
                                             ))}
                                         </List>
                                     )}
-                                    {/* Meta Textarea */}
+                                    {renderSkillBadges()}
                                     <Textarea
                                         mt={4}
                                         placeholder="Shops that are except to show popup alerts"
@@ -266,6 +332,7 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
                                         id="shops"
                                         name="unlocked_dev_shops"
                                         onChange={(e) => handleChange(e, true)}
+                                        isReadOnly
                                     />
                                     <FormHelperText fontSize="sm">
                                         Write comma-separated shop URLs here. For single entry keep as it is.
