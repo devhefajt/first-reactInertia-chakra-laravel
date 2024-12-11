@@ -18,7 +18,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 export default function Configs() {
-    const [configs, setConfigs] = useState({})
+    const [configs, setConfigs] = useState({});
     const [isLoading, setIsLoading] = useState(false)
 
 //search and count state
@@ -39,61 +39,61 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
             return setConfigs((prev) => ({...prev, [name]: {...prev[name], ['meta']: value}}));
         }
         setConfigs((prev) => ({...prev, [name]: {...prev[name], ['value']: value || checked}}));
-
     }
 
-    //search handle
+
+        // Search handle
+        const handleSearchChange = (e) => {
+            const text = e.target.value;
+            setSearchText(text);
     
-    const handleSearchChange = (e) => {
-        const text = e.target.value;
-        setSearchText(text);
-
-        if (text.trim() === "") {
-            setSuggestions([]);
-            return;
-        }
-
-        const filtered = skillOptions.filter(
-            (skill) =>
-                skill.toLowerCase().includes(text.toLowerCase()) &&
-                !(configs?.unlocked_dev_shops?.meta || "").split(", ").includes(skill)
-        );
-
-        setSuggestions(filtered);
-    };
+            if (text.trim() === "") {
+                setSuggestions([]);
+                return;
+            }
+    
+            const filtered = skillOptions.filter(
+                (skill) =>
+                    skill.toLowerCase().includes(text.toLowerCase()) &&
+                    !(configs?.unlocked_dev_shops?.meta || "").split(", ").includes(skill)
+            );
+    
+            setSuggestions(filtered);
+        };
 
  
     // Add skill to the meta string
     const handleSelectSkill = (skill) => {
         const currentMeta = configs?.unlocked_dev_shops?.meta || "";
         const updatedMeta = currentMeta ? `${currentMeta}, ${skill}` : skill;
+    
         setConfigs((prev) => ({
             ...prev,
             unlocked_dev_shops: { ...prev.unlocked_dev_shops, meta: updatedMeta },
         }));
-
-        const updatedCount = updatedMeta.split(", ").length;
-        setCounter(updatedCount);
-
+    
+        const updatedSkillsCount = updatedMeta.split(',').filter((skill) => skill.trim() !== "").length;
+        setCounter(updatedSkillsCount);
+    
         setSearchText("");
         setSuggestions([]);
     };
-
 
     // Remove skill from the meta string
     const handleRemoveSkill = (skill) => {
         const currentMeta = configs?.unlocked_dev_shops?.meta || "";
         const updatedMeta = currentMeta
-            .split(", ")
-            .filter((item) => item !== skill)
+            .split(",")
+            .filter((item) => item.trim() !== skill.trim())
             .join(", ");
+    
         setConfigs((prev) => ({
             ...prev,
             unlocked_dev_shops: { ...prev.unlocked_dev_shops, meta: updatedMeta },
         }));
-
-        const updatedCount = updatedMeta ? updatedMeta.split(", ").length : 0;
-        setCounter(updatedCount);
+    
+        const updatedSkillsCount = updatedMeta.split(',').filter((skill) => skill.trim() !== "").length;
+        setCounter(updatedSkillsCount);
     };
 
  
@@ -101,30 +101,28 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
         setIsLoading(true);
         axios.get("/api/get-list").then((res) => {
             if (res?.status === 200) {
-                const {configs} = res?.data
-                let customConfigs = {}
-                configs.map(config => {
-                    if (config.key === 'enable_order_limit_popup') {
-                        customConfigs[config.key] = config?.meta.length > 0 ? {...config, meta: config.meta.join(', ')} : {...config};
-                    }
-                    if (config.key === 'enable_view_limit_popup') {
-                        customConfigs[config.key] = config?.meta.length > 0 ? {...config, meta: config.meta.join(', ')} : {...config};
-                    }
-                    if (config.key === 'enable_profile_limit_popup') {
-                        customConfigs[config.key] = config?.meta.length > 0 ? {...config, meta: config.meta.join(', ')} : {...config};
-                    }
-                    if (config.key === 'unlocked_dev_shops') {
+                const configs = res?.data?.configs;
+                let customConfigs = {};
+                configs?.map((config) => { 
+                    if ((config.key === 'enable_order_limit_popup') || (config.key === 'enable_view_limit_popup')
+                        || (config.key === 'enable_profile_limit_popup') || (config.key === 'unlocked_dev_shops'))
+                    {
                         customConfigs[config.key] = config?.meta.length > 0 ? {...config, meta: config.meta.join(', ')} : {...config};
                     }
                     else {
                         customConfigs[config.key] = {...config};
                     }
-                    delete customConfigs[config.key].key;
-                })
+                });
+                
                 setConfigs(customConfigs);
+                
+                const unlockedDevShopsMeta = customConfigs?.unlocked_dev_shops?.meta || '';
+                const initialSkillsCount = unlockedDevShopsMeta.split(',').filter(skill => skill.trim() !== "").length;
+                setCounter(initialSkillsCount);
             }
         }).finally(() => setIsLoading(false));
     };
+
 
     const saveConfig = () => {
         setIsLoading(true);
@@ -177,6 +175,7 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
                 ))}
             </Box>
         );
+
     };
 
     return (<AdminMasterLayout>
@@ -328,7 +327,7 @@ const skillOptions = ["Angular","CSS","Graphic Design","Ember","HTML","Informati
                                     <Textarea
                                         mt={4}
                                         placeholder="Shops that are except to show popup alerts"
-                                        value={configs?.unlocked_dev_shops?.meta || ""}
+                                        value={configs?.unlocked_dev_shops?.meta || ''}
                                         id="shops"
                                         name="unlocked_dev_shops"
                                         onChange={(e) => handleChange(e, true)}

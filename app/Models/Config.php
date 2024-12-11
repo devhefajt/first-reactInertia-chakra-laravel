@@ -12,4 +12,8 @@ class Config extends Model
     protected $fillable = [
         'key', 'value', 'meta', 'status'
     ];
+
+    protected $casts = [
+        'meta' => 'array',
+    ];
 }
