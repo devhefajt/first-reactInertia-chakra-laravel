@@ -28,11 +28,10 @@ class ConfigService
 
                 if (!blank($item['meta'])) {
                     $meta = explode(',', $item['meta']);
-                    $updatedData['meta'] = array_map('trim', $meta);
+                    $updatedData['meta'] = json_encode(array_map('trim', $meta));
                 }else{
                     $updatedData['meta'] = null;
                 }
-
                 DB::table('configs')->whereKey($key)->update($updatedData);
             }
         }
